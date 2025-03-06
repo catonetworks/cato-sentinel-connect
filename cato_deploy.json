@@ -1,0 +1,1034 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": 
+    {
+        "CatoAccountId": 
+        {
+            "defaultValue": "",
+            "type": "securestring"
+        },
+        "CatoApiKey": 
+        {
+            "defaultValue": "",
+            "type": "securestring"
+        },
+        "CatoApiUrl": 
+        {
+            "defaultValue": "https://api.catonetworks.com/api/v1/graphql2",
+            "type": "string"
+        },
+        "SentinelWorkspace": 
+        {
+            "defaultValue": "Sentinel-Workspace-Name",
+            "type": "string"
+        },           
+        "CatoEventEngineName":
+        {
+            "defaultValue": "CatoEng",
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 12
+        }
+    },
+    "variables": 
+    {
+        "uniqVal": "[substring(uniqueString(deployment().name),0,3)]",
+        "deploySuffix": "[concat('-', variables('uniqVal'))]",
+        "naName": "[concat(toLower(parameters('CatoEventEngineName')), variables('deploySuffix'))]",
+        "storageName": "[concat(toLower(parameters('CatoEventEngineName')), variables('uniqVal'))]",     
+        "CatoEventEngineNA": "[concat(parameters('CatoEventEngineName'), variables('deploySuffix'))]",
+        "webConfigName": "[concat(variables('CatoEventEngineNA'), '/web')]",
+        "CatoEventEngineDCR": "[concat(parameters('CatoEventEngineName'), variables('deploySuffix'))]",
+        "CatoEventEngineDCE": "[concat(parameters('CatoEventEngineName'), variables('deploySuffix'))]",
+        "tableEventName": "[concat(variables('SentinelWorkspace'), '/CatoEventEngine_CL')]",
+        "tableStoriesName": "[concat(variables('SentinelWorkspace'), '/CatoStoriesEngine_CL')]",
+        "tableAuditName": "[concat(variables('SentinelWorkspace'), '/CatoAuditEngine_CL')]",
+        "CatoServerPlan": "[concat(parameters('CatoEventEngineName'), variables('deploySuffix'))]",
+        "SentinelWorkspace": "[parameters('SentinelWorkspace')]",
+        "SentinelWorkspaceResId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('SentinelWorkspace'))]"
+
+    },
+    "resources": 
+    [
+        {
+            "type": "Microsoft.Insights/components",
+            "apiVersion": "2020-02-02",
+            "name": "[variables('CatoEventEngineNA')]",
+            "location": "[resourceGroup().location]",
+            "kind": "web",
+            "properties": 
+            {
+                "Application_Type": "web",
+                "RetentionInDays": 90,
+                "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('SentinelWorkspace'))]",
+                "IngestionMode": "LogAnalytics",
+                "publicNetworkAccessForIngestion": "Enabled",
+                "publicNetworkAccessForQuery": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Insights/dataCollectionEndpoints",
+            "apiVersion": "2023-03-11",
+            "name": "[variables('CatoEventEngineDCE')]",
+            "location": "[resourceGroup().location]",
+            "properties": 
+            {
+                "networkAcls": 
+                {
+                    "publicNetworkAccess": "Enabled"
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2023-05-01",
+            "name": "[variables('storageName')]",
+            "location": "[resourceGroup().location]",
+            "sku": 
+            {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": 
+            {
+                "allowCrossTenantReplication": false,
+                "minimumTlsVersion": "TLS1_0",
+                "allowBlobPublicAccess": false,
+                "networkAcls": 
+                {
+                    "bypass": "AzureServices",
+                    "virtualNetworkRules": 
+                    [
+                    ],
+                    "ipRules": 
+                    [
+                    ],
+                    "defaultAction": "Allow"
+                },
+                "supportsHttpsTrafficOnly": true,
+                "encryption": 
+                {
+                    "services": 
+                    {
+                        "file": 
+                        {
+                            "keyType": "Account",
+                            "enabled": true
+                        },
+                        "blob": 
+                        {
+                            "keyType": "Account",
+                            "enabled": true
+                        }
+                    },
+                    "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2023-12-01",
+            "name": "[variables('CatoServerPlan')]",
+            "location": "[resourceGroup().location]",
+            "sku": 
+            {
+                "name": "Y1",
+                "tier": "Dynamic",
+                "size": "Y1",
+                "family": "Y",
+                "capacity": 0
+            },
+            "kind": "functionapp",
+            "properties": 
+            {
+                "perSiteScaling": false,
+                "elasticScaleEnabled": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0,
+                "zoneRedundant": false
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/tables",
+            "apiVersion": "2022-10-01",
+            "name": "[variables('tableEventName')]",
+            "properties": 
+            {
+                "totalRetentionInDays": 30,
+                "plan": "Analytics",
+                "schema": 
+                {
+                    "name": "CatoEventEngine_CL",
+                    "columns": 
+                    [
+                        {
+                            "name": "LogData",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "AccountId",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "AccountName",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "EventType",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "EventSubType",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "AdditionalContext",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "TimeGenerated",
+                            "type": "datetime"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/tables",
+            "apiVersion": "2022-10-01",
+            "name": "[variables('tableAuditName')]",
+            "properties": 
+            {
+                "totalRetentionInDays": 30,
+                "plan": "Analytics",
+                "schema": 
+                {
+                    "name": "CatoAuditEngine_CL",
+                    "columns": 
+                    [
+                        {
+                            "name": "AuditData",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "AdditionalContext",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "TimeGenerated",
+                            "type": "datetime"
+                        }
+                    ]
+                }
+            }
+        },        
+        {
+            "type": "Microsoft.OperationalInsights/workspaces/tables",
+            "apiVersion": "2022-10-01",
+            "name": "[variables('tableStoriesName')]",
+            "properties": 
+            {
+                "totalRetentionInDays": 30,
+                "plan": "Analytics",
+                "schema": 
+                {
+                    "name": "CatoStoriesEngine_CL",
+                    "columns": 
+                    [
+                        {
+                            "name": "TimeGenerated",
+                            "type": "datetime"
+                        },
+                        {
+                            "name": "AccountId",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "AccountName",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "CreatedAt",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "ID",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "Summary",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "UpdatedAt",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "StoryData",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "FirstSignal",
+                            "type": "dynamic"
+                        },
+                        {
+                            "name": "LastSignal",
+                            "type": "dynamic"
+                        }                        
+                    ]
+                }
+            }
+        },
+
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(variables('storageName'), '/default')]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+            ],
+            "sku": 
+            {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "properties": 
+            {
+                "cors": 
+                {
+                    "corsRules": 
+                    [
+                    ]
+                },
+                "deleteRetentionPolicy": 
+                {
+                    "allowPermanentDelete": false,
+                    "enabled": false
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(variables('storageName'), '/default')]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+            ],
+            "sku": 
+            {
+                "name": "Standard_RAGRS",
+                "tier": "Standard"
+            },
+            "properties": 
+            {
+                "protocolSettings": 
+                {
+                    "smb": 
+                    {
+                    }
+                },
+                "cors": 
+                {
+                    "corsRules": 
+                    [
+                    ]
+                },
+                "shareDeleteRetentionPolicy": 
+                {
+                    "enabled": true,
+                    "days": 7
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(variables('storageName'), '/default')]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+            ],
+            "properties": 
+            {
+                "cors": 
+                {
+                    "corsRules": 
+                    [
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/tableServices",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(variables('storageName'), '/default')]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+            ],
+            "properties": 
+            {
+                "cors": 
+                {
+                    "corsRules": 
+                    [
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "name": "[guid('Deployment Role Storage', variables('CatoEventEngineNA'))]",
+            "scope": "[concat('Microsoft.Storage/storageAccounts', '/', variables('storageName'))]",
+            "properties": {
+              "description": "[concat(variables('CatoEventEngineNA'), 'Storage Blog Data Owner role for writing state to Blob.')]",
+              "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA')), '2022-03-01', 'full').identity.principalId]",
+              "principalType": "ServicePrincipal",
+              "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA'))]",
+                "[resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces/tables', variables('SentinelWorkspace'), 'CatoEventEngine_CL')]"
+            ]            
+        },
+               
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "name": "[guid('Deployment Log Storage', variables('CatoEventEngineNA'))]",
+            "properties": {
+              "description": "[concat(variables('CatoEventEngineNA'), 'Log Analytics Contributo role for writing logs to workspace.')]",
+              "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA')), '2022-03-01', 'full').identity.principalId]",
+              "principalType": "ServicePrincipal",
+              "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '92aaf0da-9dab-42b6-94a3-d43ce8d16293')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA'))]",
+                "[resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces/tables', variables('SentinelWorkspace'), 'CatoEventEngine_CL')]"
+            ]            
+        },
+        {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2022-04-01",
+            "name": "[guid('Deployment Metrics Storage', variables('CatoEventEngineNA'))]",
+            "properties": {
+              "description": "[concat(variables('CatoEventEngineNA'), 'Monitoring Metrics Publisher role for writing metrics to workspace.')]",
+              "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA')), '2022-03-01', 'full').identity.principalId]",
+              "principalType": "ServicePrincipal",
+              "roleDefinitionId": "[subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '3913510d-42f4-4e42-8a64-420c390055eb')]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA'))]",
+                "[resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces/tables', variables('SentinelWorkspace'), 'CatoEventEngine_CL')]"
+            ]            
+        }, 
+        
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2023-12-01",
+            "name": "[variables('CatoEventEngineNA')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Web/serverfarms', variables('CatoServerPlan'))]"
+            ],
+            "kind": "functionapp,linux",
+            "identity": 
+            {
+                "type": "SystemAssigned"
+            },
+            "properties": 
+            {
+                "enabled": true,
+                "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('CatoServerPlan'))]",
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "dnsConfiguration": 
+                {
+                },
+                "vnetRouteAllEnabled": false,
+                "vnetImagePullEnabled": false,
+                "vnetContentShareEnabled": false,
+                "siteConfig": 
+                {
+                    "appSettings": [
+                        {
+                            "name": "CATO_RG_NAME",
+                            "value": "[resourceGroup().Name]"
+                        },
+                        {
+                            "name": "CATO_API_KEY",
+                            "value": "[parameters('CatoApiKey')]"
+                        },
+                        {
+                            "name": "CATO_ACCOUNT_ID",
+                            "value": "[parameters('CatoAccountId')]"
+                        },
+                        {
+                            "name": "CATO_API_URL",
+                            "value": "[parameters('CatoApiUrl')]"
+                        },  
+                        {
+                            "name": "AZ_LOG_ENDPOINT",
+                            "value": "[reference(resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('CatoEventEngineDCE')), '2023-03-11', 'Full').properties.logsIngestion.endpoint]"
+                        },
+                        {
+                            "name": "CATO_LOG_APP_WORKSPACE_ID",
+                            "value": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('SentinelWorkspace')), '2023-09-01', 'Full').properties.customerId]"
+                        },
+                        {
+                            "name": "DATA_COLLECTION_RULE_IMMUTABLE_ID",
+                            "value": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR')), '2023-03-11', 'Full').properties.immutableId]"
+                        },
+                        {
+                            "name": "DATA_COLLECTION_RULE_STREAM_NAME",
+                            "value": "Custom-CatoEventEngine"
+                        },
+                        {
+                            "name": "DATA_COLLECTION_RULE_STREAM_TABLE",
+                            "value": "Custom-CatoEventEngine_CL"
+                        },
+                        {
+                            "name": "DATA_COLLECTION_RULE_AUDIT_TABLE",
+                            "value": "Custom-CatoAuditEngine_CL"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "custom"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~4"
+                        },
+                        {
+                            "name": "AZ_DCR_ID",
+                            "value": "[resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR'))]"
+                        },
+                        {
+                            "name": "AZ_DCR_IMMUTABLE_ID",
+                            "value": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR')), '2023-03-11', 'Full').properties.immutableId]"
+                        },
+                        {
+                            "name": "AZ_EVENT_ENGINE_SA",
+                            "value": "[variables('storageName')]"
+                        },
+                        {
+                            "name": "DATA_COLLECTION_RULE_STORY_NAME",
+                            "value": "Custom-CatoStoriesEngine"
+                        },
+                        {
+                            "name": "DATA_COLLECTION_RULE_AUDIT_NAME",
+                            "value": "Custom-CatoAuditEngine"
+                        },                                                                                                                                                                                       
+                        {
+                            "name": "WEBSITE_RUN_FROM_PACKAGE",
+                            "value": "https://cato-pub.s3.us-west-2.amazonaws.com/eventEngine/deploy-se.zip"
+                        }                                                       
+                    ],
+                    "numberOfWorkers": 1,
+                    "acrUseManagedIdentityCreds": false,
+                    "alwaysOn": false,
+                    "http20Enabled": true,
+                    "functionAppScaleLimit": 200,
+                    "minimumElasticInstanceCount": 1
+                },
+                "scmSiteAlsoStopped": false,
+                "clientAffinityEnabled": false,
+                "clientCertEnabled": false,
+                "clientCertMode": "Required",
+                "hostNamesDisabled": false,
+                "vnetBackupRestoreEnabled": false,
+                "containerSize": 0,
+                "dailyMemoryTimeQuota": 0,
+                "httpsOnly": false,
+                "redundancyMode": "None",
+                "storageAccountRequired": false,
+                "keyVaultReferenceIdentity": "SystemAssigned"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2023-12-01",
+            "name": "[concat(variables('CatoEventEngineNA'), '/ftp')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA'))]"
+            ],
+            "properties": 
+            {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/basicPublishingCredentialsPolicies",
+            "apiVersion": "2023-12-01",
+            "name": "[concat(variables('CatoEventEngineNA'), '/scm')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA'))]"
+            ],
+            "properties": 
+            {
+                "allow": true
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/config",
+            "apiVersion": "2023-12-01",
+            "name": "[variables('webConfigName')]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA'))]"
+            ],
+            "properties": 
+            {
+                "numberOfWorkers": 1,
+                "defaultDocuments": 
+                [
+                    "Default.htm",
+                    "Default.html",
+                    "Default.asp",
+                    "index.htm",
+                    "index.html",
+                    "iisstart.htm",
+                    "default.aspx",
+                    "index.php"
+                ],
+                "netFrameworkVersion": "v4.0",
+                "requestTracingEnabled": false,
+                "remoteDebuggingEnabled": true,
+                "httpLoggingEnabled": true,
+                "acrUseManagedIdentityCreds": false,
+                "logsDirectorySizeLimit": 35,
+                "detailedErrorLoggingEnabled": true,
+                "publishingUsername": "$CatoEventEngineNA",
+                "scmType": "None",
+                "use32BitWorkerProcess": false,
+                "webSocketsEnabled": false,
+                "alwaysOn": false,
+                "managedPipelineMode": "Integrated",
+                "virtualApplications": 
+                [
+                    {
+                        "virtualPath": "/",
+                        "physicalPath": "site\\wwwroot",
+                        "preloadEnabled": false
+                    }
+                ],
+                "loadBalancing": "LeastRequests",
+                "experiments": 
+                {
+                    "rampUpRules": 
+                    [
+                    ]
+                },
+                "autoHealEnabled": false,
+                "vnetRouteAllEnabled": false,
+                "vnetPrivatePortsCount": 0,
+                "localMySqlEnabled": false,
+                "ipSecurityRestrictions": 
+                [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictions": 
+                [
+                    {
+                        "ipAddress": "Any",
+                        "action": "Allow",
+                        "priority": 2147483647,
+                        "name": "Allow all",
+                        "description": "Allow all access"
+                    }
+                ],
+                "scmIpSecurityRestrictionsUseMain": false,
+                "http20Enabled": true,
+                "minTlsVersion": "1.2",
+                "scmMinTlsVersion": "1.2",
+                "ftpsState": "FtpsOnly",
+                "preWarmedInstanceCount": 0,
+                "functionAppScaleLimit": 200,
+                "functionsRuntimeScaleMonitoringEnabled": false,
+                "minimumElasticInstanceCount": 1,
+                "azureStorageAccounts": 
+                {
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites/hostNameBindings",
+            "apiVersion": "2023-12-01",
+            "name": "[concat(variables('CatoEventEngineNA'), '/', variables('CatoEventEngineNA'), '.azurewebsites.net')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA'))]"
+            ],
+            "properties": 
+            {
+                "siteName": "CatoEventEngineNA",
+                "hostNameType": "Verified"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(variables('storageName'), '/default/scm-releases')]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+            ],
+            "properties": 
+            {
+                "immutableStorageWithVersioning": 
+                {
+                    "enabled": false
+                },
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/fileServices/shares",
+            "apiVersion": "2023-05-01",
+            "name": "[concat(variables('storageName'), '/default/catoeventenginenacb0243807b2b')]",
+            "dependsOn": 
+            [
+                "[resourceId('Microsoft.Storage/storageAccounts/fileServices', variables('storageName'), 'default')]",
+                "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
+            ],
+            "properties": 
+            {
+                "accessTier": "TransactionOptimized",
+                "shareQuota": 102400,
+                "enabledProtocols": "SMB"
+            }
+        },
+        {
+            "type": "Microsoft.Insights/dataCollectionRules",
+            "apiVersion": "2023-03-11",
+            "name": "[variables('CatoEventEngineDCR')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('CatoEventEngineDCE'))]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces/tables', variables('SentinelWorkspace'), 'CatoEventEngine_CL')]",
+                "[resourceId('Microsoft.OperationalInsights/workspaces/tables', variables('SentinelWorkspace'), 'CatoStoriesEngine_CL')]"
+            ],
+            "properties": 
+            {
+                "description": "CatoEventEngine DCR",
+                "dataCollectionEndpointId": "[resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('CatoEventEngineDCE'))]",
+                "streamDeclarations": 
+                {
+                    "Custom-CatoEventEngine": 
+                    {
+                        "columns": 
+                        [
+                            {
+                                "name": "time",
+                                "type": "datetime"
+                            },
+                            {
+                                "name": "TimeGenerated",
+                                "type": "datetime"
+                            },
+                            {
+                                "name": "time_str",
+                                "type": "datetime"
+                            },
+                            {
+                                "name": "account_id",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "account_name",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "action",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "event_id",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "cato_event_id",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "CatoEventSubType",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "CatoEventType",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "event_message",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "event_sub_type",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "event_type",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "AdditionalContext",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "LogData",
+                                "type": "dynamic"
+                            }
+                        ]
+                    },
+                    "Custom-CatoStoriesEngine": {
+                        "columns": [
+                            {
+                                "name": "TimeGenerated",
+                                "type": "datetime"
+                            },                    
+                            {
+                                "name": "AccountId",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "AccountName",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "CreatedAt",
+                                "type": "dynamic"
+                            },            
+                            {
+                                "name": "ID",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "Summary",
+                                "type": "dynamic"
+                            },      
+                            {
+                                "name": "UpdatedAt",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "StoryData",
+                                "type": "dynamic"
+                            },                                  
+                            {
+                                "name": "FirstSignal",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "LastSignal",
+                                "type": "dynamic"
+                            }                                                            
+                        ]
+                    },
+                    "Custom-CatoAuditEngine": 
+                    {
+                        "columns": 
+                        [
+                            {
+                                "name": "TimeGenerated",
+                                "type": "datetime"
+                            },
+                            {
+                                "name": "AuditData",
+                                "type": "dynamic"
+                            },
+                            {
+                                "name": "AdditionalContext",
+                                "type": "dynamic"
+                            }                                             
+                        ]
+                    },                    
+                    "Custom-CommonSecurityLog": 
+                    {
+                        "columns": 
+                        [
+                            {
+                                "name": "TimeGenerated",
+                                "type": "datetime"
+                            },
+                            {
+                                "name": "LogData",
+                                "type": "dynamic"
+                            }                    
+                        ]
+                    }                                      
+                },
+                "destinations": 
+                {
+                    "logAnalytics": 
+                    [
+                        {
+                            "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('SentinelWorkspace'))]",
+                            "name": "LogAnalyticsDest"
+                        }
+                    ]
+                },
+                "dataFlows": 
+                [
+                    {
+                        "streams": 
+                        [
+                            "Custom-CatoEventEngine"
+                        ],
+                        "destinations": 
+                        [
+                            "LogAnalyticsDest"
+                        ],
+                        "transformKql": "source | extend LogData = parse_json(LogData) | extend TimeGenerated=todatetime(LogData.time_str) | extend CatoEventType=LogData.event_type | extend CatoEventSubType=LogData.event_sub_type",
+                        "outputStream": "Custom-CatoEventEngine_CL"
+                    },
+                    {
+                        "streams": [
+                            "Custom-CatoStoriesEngine"
+                        ],
+                        "destinations": [
+                            "LogAnalyticsDest"
+                        ],
+                        "transformKql": "source | extend StoryData = parse_json(StoryData) | extend TimeGenerated=todatetime(UpdatedAt.time_str)",
+                        "outputStream": "Custom-CatoStoriesEngine_CL"
+                    },
+                    {
+                        "streams": 
+                        [
+                            "Custom-CatoAuditEngine"
+                        ],
+                        "destinations": 
+                        [
+                            "LogAnalyticsDest"
+                        ],
+                        "transformKql": "source | extend AuditData = parse_json(AuditData) | extend TimeGenerated=todatetime(AuditData.time_str)",
+                        "outputStream": "Custom-CatoAuditEngine_CL"
+                    },                    
+                    {
+                        "streams": 
+                        [
+                            "Custom-CommonSecurityLog"
+                        ],
+                        "destinations": 
+                        [
+                            "LogAnalyticsDest"
+                        ],
+                        "transformKql": "source | extend LogData=parse_json(LogData) | project TimeGenerated=todatetime(LogData.TimeGenerated), DeviceVendor=tostring(LogData.DeviceVendor), DeviceProduct=tostring(LogData.DeviceProduct), DeviceVersion=tostring(LogData.DeviceVersion), DeviceEventClassID=tostring(LogData.DeviceEventClassID), Activity=tostring(LogData.name), LogSeverity=tostring(LogData.severity), OriginalLogSeverity=tostring(LogData.OriginalLogSeverity), AdditionalExtensions=tostring(LogData.AdditionalExtensions),  DeviceAction=tostring(LogData.DeviceAction), ApplicationProtocol=tostring(LogData.ApplicationProtocol), DestinationDnsDomain=tostring(LogData.destinationDnsDomain), DestinationServiceName=tostring(LogData.destinationServiceName), DestinationTranslatedAddress=tostring(LogData.destinationTranslatedAddress), CommunicationDirection=tostring(LogData.deviceDirection), DeviceDnsDomain=tostring(LogData.deviceDnsDomain), DeviceExternalID=tostring(LogData.deviceExternalId), DeviceFacility=tostring(LogData.deviceFacility), DeviceInboundInterface=tostring(LogData.deviceInboundInterface), DeviceNtDomain=tostring(LogData.DeviceNtDomain), DeviceOutboundInterface=tostring(LogData.deviceOutboundInterface), DevicePayloadId=tostring(LogData.devicePayloadId), ProcessName=tostring(LogData.deviceProcessName), DeviceTranslatedAddress=tostring(LogData.deviceTranslatedAddress), DestinationHostName=tostring(LogData.dhost), DestinationMACAddress=tostring(LogData.dmac), DestinationNTDomain=tostring(LogData.dntdom), DestinationUserPrivileges=tostring(LogData.dpriv), DestinationProcessName=tostring(LogData.dproc), DestinationIP=tostring(LogData.dst), DeviceTimeZone=tostring(LogData.dtz), DestinationUserID=tostring(LogData.duid), DestinationUserName=tostring(LogData.duser), DeviceAddress=tostring(LogData.dvc), DeviceName=tostring(LogData.dvchost), DeviceMacAddress=tostring(LogData.dvcmac), EndTime=todatetime(LogData.endTime), ExtID=tostring(LogData.externalId), FileCreateTime=tostring(LogData.fileCreateTime), FileHash=tostring(LogData.fileHash), FileID=tostring(LogData.fileId), FilePath=tostring(LogData.filePath), SourceProcessId=toint(LogData.spid), ProcessID=toint(LogData.dvcpid), SentBytes=tolong(LogData.out), FileType=tostring(LogData.fileType), FileName=tostring(LogData.fname), Message=tostring(LogData.msg), EventOutcome=tostring(LogData.outcome), Protocol=tostring(LogData.proto), Reason=tostring(LogData.reason), RequestURL=tostring(LogData.request), RequestClientApplication=tostring(LogData.requestClientApplication), RequestContext=tostring(LogData.requestContext), RequestCookies=tostring(LogData.requestCookies), RequestMethod=tostring(LogData.requestMethod), ReceiptTime=tostring(LogData.rt), SourceHostName=tostring(LogData.shost), SourceMACAddress=tostring(LogData.smac), ExternalID=toint(LogData.externalId), SourceDnsDomain=tostring(LogData.sourceDnsDomain), SourcePort=toint(LogData.spt), SourceTranslatedAddress=tostring(LogData.sourceTranslatedAddress), SourceTranslatedPort=toint(LogData.sourceTranslatedPort), DestinationPort=toint(LogData.dpt), SourceIP=tostring(LogData.src), StartTime=todatetime(LogData.startTime), FileSize=toint(LogData.fsize), SourceUserID=tostring(LogData.suid), SourceUserName=tostring(LogData.suser), DeviceEventCategory=tostring(LogData.cat), RemoteIP=tostring(LogData.RemoteIP), RemotePort=tostring(LogData.RemotePort), MaliciousIP=tostring(LogData.MaliciousIP), IndicatorThreatType=tostring(LogData.IndicatorThreatType), ThreatDescription=tostring(LogData.ThreatDescription), ThreatConfidence=tostring(LogData.ThreatConfidence), MaliciousIPCountry=tostring(LogData.MaliciousIPCountry), Computer=tostring(LogData.host), ThreatSeverity=toint(LogData.ThreatSeverity), EventType=toint(LogData.type), CollectorHostName=tostring(LogData.CollectorHostName), EventCount=toint(LogData.EventCount), DestinationTranslatedPort=toint(LogData.DestinationTranslatedPort)",
+                        "outputStream": "Microsoft-CommonSecurityLog"
+                    }                                     
+                ]
+            }
+        }
+    ],
+    "outputs": {
+        "CATO_RG_NAME": {
+            "type": "string",
+            "value": "[resourceGroup().Name]"
+        },
+        "CATO_API_KEY": {
+            "type": "string",
+            "value": "secretVault"
+        },
+        "CATO_ACCOUNT_ID": {
+            "type": "string",
+            "value": "secretVault"
+        },
+        "CATO_API_URL": {
+            "type": "string",
+            "value": "[parameters('CatoApiUrl')]"
+        },
+        "AZ_LOG_ENDPOINT": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Insights/dataCollectionEndpoints', variables('CatoEventEngineDCE')), '2023-03-11', 'Full').properties.logsIngestion.endpoint]"
+        },
+        "DATA_COLLECTION_RULE_IMMUTABLE_ID": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR')), '2023-03-11', 'Full').properties.immutableId]"
+        },
+        "DATA_COLLECTION_RULE_STREAM_NAME": {
+            "type": "string",
+            "value": "Custom-CatoEventEngine"
+        },
+        "DATA_COLLECTION_RULE_STREAM_TABLE": {
+            "type": "string",
+            "value": "Custom-CatoEventEngine_CL"
+        },
+        "AZ_DCR_ID": {
+            "type": "string",
+            "value": "[resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR'))]"
+        },
+        "AZ_DCR_IMMUTABLE_ID": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Insights/dataCollectionRules', variables('CatoEventEngineDCR')), '2023-03-11', 'Full').properties.immutableId]"
+        },
+        "AZ_EVENT_ENGINE_SA": {
+            "type": "string",
+            "value": "[variables('storageName')]"
+        },
+        "DATA_COLLECTION_RULE_STORY_NAME": {
+            "type": "string",
+            "value": "Custom-CatoStoriesEngine"
+        },                                                                                            
+        "workspaceWS": {
+            "type": "string",
+            "value": "[variables('SentinelWorkspace')]"
+        },
+        "resourceProperties": {
+            "type": "object",
+            "value": "[reference(resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA')), '2022-03-01', 'full')]"
+        },
+        "principalId": {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Web/sites', variables('CatoEventEngineNA')), '2022-03-01', 'full').identity.principalId]"
+        },
+        "resGroupId": {
+            "type": "string",
+            "value": "[resourceGroup().id]"
+        },      
+        "storageName": {
+            "type": "string",
+            "value": "[variables('storageName')]"
+        },
+        "deploySuffix": {
+            "type": "string",
+            "value": "[variables('deploySuffix')]"
+        },
+        "naName": {
+            "type": "string",
+            "value": "[variables('naName')]"
+        },        
+        "dataCollEndId": {
+            "type": "string",
+            "value": "[variables('CatoEventEngineDCE')]"
+        }
+    }    
+}
