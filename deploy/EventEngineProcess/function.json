@@ -1,0 +1,10 @@
+{
+  "bindings": [
+    {
+      "name": "eventTimer",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "*/30 * * * * *"
+    }
+  ]
+}
