@@ -162,7 +162,6 @@
             "name": "[variables('tableEventName')]",
             "properties": 
             {
-                "totalRetentionInDays": 30,
                 "plan": "Analytics",
                 "schema": 
                 {
@@ -207,7 +206,6 @@
             "name": "[variables('tableAuditName')]",
             "properties": 
             {
-                "totalRetentionInDays": 30,
                 "plan": "Analytics",
                 "schema": 
                 {
@@ -236,7 +234,6 @@
             "name": "[variables('tableStoriesName')]",
             "properties": 
             {
-                "totalRetentionInDays": 30,
                 "plan": "Analytics",
                 "schema": 
                 {
