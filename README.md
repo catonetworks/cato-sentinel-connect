@@ -16,4 +16,6 @@ Next, enter the Microsoft Azure Log Analytics Workspace name associated with you
 
 ![log analytics workspace](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/az-log-wrks.png?raw=true)
 
-Finally, enter a name for the resources to use in the Azure Resource Group. The default can be used or a value of less than 12 characters and greater than 3 can be entered.
+Next, enter a name for the resources to use in the Azure Resource Group. The default can be used or a value of less than 12 characters and greater than 3 can be entered.
+
+Finally, click on Review + Create
