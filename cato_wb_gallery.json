@@ -1,0 +1,733 @@
+{
+    "version": "Notebook/1.0",
+    "items": [
+      {
+        "type": 12,
+        "content": {
+          "version": "NotebookGroup/1.0",
+          "groupType": "editable",
+          "items": [
+            {
+              "type": 11,
+              "content": {
+                "version": "LinkItem/1.0",
+                "style": "tabs",
+                "links": [
+                  {
+                    "id": "8700459e-bbe4-4944-82bc-b641902b6463",
+                    "cellValue": "currentTab",
+                    "linkTarget": "parameter",
+                    "linkLabel": "Home",
+                    "subTarget": "home",
+                    "preText": "Home",
+                    "style": "link",
+                    "tabWidth": "10"
+                  },
+                  {
+                    "id": "cda12388-d0d2-4f40-9f46-ddb552f34159",
+                    "cellValue": "currentTab",
+                    "linkTarget": "parameter",
+                    "linkLabel": "Stories Workbench",
+                    "subTarget": "xdrstories",
+                    "preText": "XDR Stories",
+                    "style": "link",
+                    "tabWidth": "10"
+                  },
+                  {
+                    "id": "306bd237-2933-4ab8-bb2c-1b9d4845f624",
+                    "cellValue": "currentTab",
+                    "linkTarget": "parameter",
+                    "linkLabel": "XDR Story",
+                    "subTarget": "xdrstory",
+                    "style": "link",
+                    "tabWidth": "10"
+                  },
+                  {
+                    "id": "fdc70e19-a817-4f2d-a6e1-a81b97d591a4",
+                    "cellValue": "currentTab",
+                    "linkTarget": "parameter",
+                    "linkLabel": "Events",
+                    "subTarget": "events",
+                    "style": "link",
+                    "tabWidth": "10"
+                  }
+                ]
+              },
+              "customWidth": "80",
+              "name": "nav"
+            },
+            {
+              "type": 9,
+              "content": {
+                "version": "KqlParameterItem/1.0",
+                "parameters": [
+                  {
+                    "id": "2365e27d-9d61-4302-970d-09222d2845fc",
+                    "version": "KqlParameterItem/1.0",
+                    "name": "timeframe",
+                    "label": "Timeframe",
+                    "type": 4,
+                    "isRequired": true,
+                    "typeSettings": {
+                      "selectableValues": [
+                        {
+                          "durationMs": 300000
+                        },
+                        {
+                          "durationMs": 900000
+                        },
+                        {
+                          "durationMs": 1800000
+                        },
+                        {
+                          "durationMs": 3600000
+                        },
+                        {
+                          "durationMs": 14400000
+                        },
+                        {
+                          "durationMs": 43200000
+                        },
+                        {
+                          "durationMs": 86400000
+                        },
+                        {
+                          "durationMs": 172800000
+                        },
+                        {
+                          "durationMs": 259200000
+                        },
+                        {
+                          "durationMs": 604800000
+                        },
+                        {
+                          "durationMs": 1209600000
+                        },
+                        {
+                          "durationMs": 2419200000
+                        },
+                        {
+                          "durationMs": 2592000000
+                        },
+                        {
+                          "durationMs": 5184000000
+                        },
+                        {
+                          "durationMs": 7776000000
+                        }
+                      ]
+                    },
+                    "timeContext": {
+                      "durationMs": 86400000
+                    },
+                    "value": {
+                      "durationMs": 2592000000
+                    }
+                  },
+                  {
+                    "id": "51aa3a9b-14e0-4c22-a60d-abdbf8813f00",
+                    "version": "KqlParameterItem/1.0",
+                    "name": "Subscription",
+                    "type": 6,
+                    "isRequired": true,
+                    "multiSelect": true,
+                    "quote": "'",
+                    "delimiter": ",",
+                    "typeSettings": {
+                      "additionalResourceOptions": [
+                        "value::all"
+                      ],
+                      "includeAll": false,
+                      "showDefault": false
+                    },
+                    "timeContext": {
+                      "durationMs": 86400000
+                    },
+                    "defaultValue": "value::all",
+                    "label": " Subscription",
+                    "value": [
+                      "value::all"
+                    ]
+                  },
+                  {
+                    "id": "f342a111-002a-47fd-807f-0d4ccac0618a",
+                    "version": "KqlParameterItem/1.0",
+                    "name": "ResourceGroup",
+                    "label": "Resource Group",
+                    "type": 2,
+                    "isRequired": true,
+                    "multiSelect": true,
+                    "quote": "'",
+                    "delimiter": ",",
+                    "query": "resources\r\n| distinct resourceGroup",
+                    "crossComponentResources": [
+                      "REPLACE_SUBSCRIPTION_ID_VALUE"
+                    ],
+                    "typeSettings": {
+                      "additionalResourceOptions": [
+                        "value::all"
+                      ],
+                      "showDefault": false
+                    },
+                    "defaultValue": "value::all",
+                    "queryType": 1,
+                    "resourceType": "microsoft.resourcegraph/resources"
+                  }                                 
+                ],
+                "style": "pills",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces"
+              },
+              "customWidth": "20",
+              "name": "parameters - 4"
+            }
+          ],
+          "exportParameters": true
+        },
+        "name": "Nav"
+      },
+      {
+        "type": 12,
+        "content": {
+          "version": "NotebookGroup/1.0",
+          "groupType": "editable",
+          "items": [
+            {
+              "type": 12,
+              "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| summarize eventinfo=count() by tostring(Summary)\n| sort by eventinfo\n| render piechart with(title=\"Event Types\")",
+                      "size": 1,
+                      "title": "Top Stories by Indication",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ]
+                    },
+                    "customWidth": "66",
+                    "name": "StoryByIndicationPie"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoEventEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| summarize eventinfo=count() by tostring(EventType)\n| sort by eventinfo\n| render piechart with(title=\"Event Types\")\n\n",
+                      "size": 1,
+                      "title": "Story Counters",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ]
+                    },
+                    "customWidth": "33",
+                    "name": "StoryCountersPie"
+                  }
+                ]
+              },
+              "customWidth": "66",
+              "name": "home-barcharts"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoStoriesEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| summarize count() by tostring(Summary), bin(todatetime(UpdatedAt),7d) \n",
+                "size": 0,
+                "title": "Stories Timeseries",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ],
+                "visualization": "unstackedbar"
+              },
+              "name": "storiestimeseries"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoStoriesEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| extend ParsedStoryData = parse_json(StoryData)\n| extend\n    Criticality = tostring(ParsedStoryData.incident.criticality),\n    Status = tostring(ParsedStoryData.incident.statusMergedIncident),\n    FirstSignalDate = todatetime(ParsedStoryData.incident.FirstSignal)\n| summarize arg_max(FirstSignalDate, Criticality, Summary, Status) by tostring(ID)\n| project Criticality, ID, Summary, Status\n| order by Criticality desc",
+                "size": 0,
+                "title": "Top Stories by Criticality",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ],
+                "gridSettings": {
+                  "formatters": [
+                    {
+                      "columnMatch": "Criticality",
+                      "formatter": 8,
+                      "formatOptions": {
+                        "palette": "red"
+                      }
+                    },
+                    {
+                      "columnMatch": "ID",
+                      "formatter": 7,
+                      "formatOptions": {
+                        "linkTarget": "Url",
+                        "linkIsContextBlade": false
+                      }
+                    }
+                  ]
+                }
+              },
+              "name": "stories"
+            }
+          ]
+        },
+        "conditionalVisibility": {
+          "parameterName": "currentTab",
+          "comparison": "isEqualTo",
+          "value": "home"
+        },
+        "name": "home"
+      },
+      {
+        "type": 12,
+        "content": {
+          "version": "NotebookGroup/1.0",
+          "groupType": "editable",
+          "items": [
+            {
+              "type": 1,
+              "content": {
+                "json": "## XDR Stories Overview"
+              },
+              "name": "text - 2"
+            },
+            {
+              "type": 12,
+              "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| summarize eventinfo=count() by tostring(Summary)\n| sort by eventinfo\n| render piechart with(title=\"Event Types\")",
+                      "size": 1,
+                      "title": "Top Stories by Indication",
+                      "timeContext": {
+                        "durationMs": 86400000
+                      },
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ]
+                    },
+                    "customWidth": "66",
+                    "name": "query - 2"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoEventEngine_CL\n| where TimeGenerated >= ago(24h)\n| summarize eventinfo=count() by tostring(EventType)\n| sort by eventinfo\n| render piechart with(title=\"Event Types\")\n\n",
+                      "size": 1,
+                      "title": "Story Counters",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ]
+                    },
+                    "customWidth": "33",
+                    "name": "query - 2"
+                  }
+                ]
+              },
+              "name": "query - 2"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoStoriesEngine_CL\n| summarize count() by tostring(Summary), bin(todatetime(UpdatedAt),7d) \n",
+                "size": 0,
+                "timeContext": {
+                  "durationMs": 2592000000
+                },
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ],
+                "visualization": "barchart"
+              },
+              "name": "query - 4"
+            }
+          ]
+        },
+        "conditionalVisibility": {
+          "parameterName": "currentTab",
+          "comparison": "isEqualTo",
+          "value": "xdrstories"
+        },
+        "name": "xdrstories"
+      },
+      {
+        "type": 12,
+        "content": {
+          "version": "NotebookGroup/1.0",
+          "groupType": "editable",
+          "items": [
+            {
+              "type": 1,
+              "content": {
+                "json": "## Detection & Response Story"
+              },
+              "name": "text - 5"
+            },
+            {
+              "type": 9,
+              "content": {
+                "version": "KqlParameterItem/1.0",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ],
+                "parameters": [
+                  {
+                    "id": "e7457461-1de1-4249-8071-7d15ee33504e",
+                    "version": "KqlParameterItem/1.0",
+                    "name": "producer",
+                    "label": "Producer",
+                    "type": 2,
+                    "isRequired": true,
+                    "query": "CatoStoriesEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| extend StoryDataParsed = parse_json(StoryData) \n| extend Producer = tostring(StoryDataParsed.incident.producer)\n| summarize by Producer\n| order by Producer asc\n| project Producer\n| extend DefaultValue = coalesce(Producer, \"\")",
+                    "crossComponentResources": [
+                      "REPLACE_SUBSCRIPTION_ID_VALUE"
+                    ],
+                    "typeSettings": {
+                      "additionalResourceOptions": [],
+                      "showDefault": false
+                    },
+                    "queryType": 0,
+                    "resourceType": "microsoft.operationalinsights/workspaces",
+                    "value": "ThreatHunt"
+                  },
+                  {
+                    "id": "ad8e2a8e-7edc-4d07-8bbd-bee371c0ee51",
+                    "version": "KqlParameterItem/1.0",
+                    "name": "currentStoryId",
+                    "label": "Current Story",
+                    "type": 2,
+                    "isRequired": true,
+                    "query": "CatoStoriesEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| extend StoryDataParsed = parse_json(StoryData) \n| where tostring(StoryDataParsed.incident.producer) == '{producer}' \n| extend FirstSignalDate = todatetime(FirstSignal)\n| summarize LatestFirstSignal = arg_max(FirstSignalDate, Summary) by tostring(ID)\n| extend StartDate = format_datetime(LatestFirstSignal, \"yyyy-MM-dd\")\n| extend StoryName = strcat(StartDate, \" - \", Summary)\n| order by StoryName asc\n| project ID, StoryName",
+                    "crossComponentResources": [
+                      "REPLACE_SUBSCRIPTION_ID_VALUE"
+                    ],
+                    "typeSettings": {
+                      "additionalResourceOptions": [],
+                      "showDefault": false
+                    },
+                    "queryType": 0,
+                    "resourceType": "microsoft.operationalinsights/workspaces",
+                    "value": "6648f063e2426c76f6e4a053"
+                  }
+                ],
+                "style": "pills",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces"
+              },
+              "name": "xdrstoryparams"
+            },
+            {
+              "type": 12,
+              "content": {
+                "version": "NotebookGroup/1.0",
+                "groupType": "editable",
+                "items": [
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| project Indication = tostring(ParsedStoryData.incident.indication)",
+                      "size": 4,
+                      "title": "Attack Detected",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "15",
+                    "name": "query - 0"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| project ProducerName = tostring(ParsedStoryData.incident.producerName)",
+                      "size": 4,
+                      "title": "Producer Name",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "10",
+                    "name": "producername"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| project ProducerName = tostring(ParsedStoryData.incident.source)",
+                      "size": 4,
+                      "title": "Source Host",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "10",
+                    "name": "sourceHost"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| project SourceIP = tostring(ParsedStoryData.incident.sourceIp)",
+                      "size": 4,
+                      "title": "Source IP",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "15",
+                    "name": "sourceip"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend StartTime = todatetime(FirstSignal), EndTime = todatetime(LastSignal)\n| extend TimeDifference = EndTime - StartTime\n| extend Days = format_datetime(todatetime(floor(TimeDifference, 1d)), \"dd\"),\n         Hours = format_datetime(todatetime(bin(bin(TimeDifference, 1d),1h)),\"hh\"),\n         Minutes = format_datetime(todatetime(bin(bin(TimeDifference, 1m),1m)),\"mm\")\n| extend TimeRangeString = strcat(Days, \" days, \", Hours, \" hours, \",Minutes,\" minutes\")\n| project TimeRangeString",
+                      "size": 4,
+                      "title": "Story Duration",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "15",
+                    "name": "storyduration"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| project targetCount = array_length(ParsedStoryData.incident.AnomalyStats.targets)",
+                      "size": 4,
+                      "title": "Targets",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "15",
+                    "name": "targets"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| project ProducerName = tostring(ParsedStoryData.incident.Threat.direction)",
+                      "size": 4,
+                      "title": "Direction",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "10",
+                    "name": "direction"
+                  },
+                  {
+                    "type": 3,
+                    "content": {
+                      "version": "KqlItem/1.0",
+                      "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| project ProducerName = tostring(ParsedStoryData.incident.criticality)",
+                      "size": 4,
+                      "title": "Criticality",
+                      "queryType": 0,
+                      "resourceType": "microsoft.operationalinsights/workspaces",
+                      "crossComponentResources": [
+                        "REPLACE_SUBSCRIPTION_ID_VALUE"
+                      ],
+                      "visualization": "card"
+                    },
+                    "customWidth": "10",
+                    "name": "criticality"
+                  }
+                ]
+              },
+              "name": "storyoverview"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| mv-expand Element = ParsedStoryData.incident.AnomalyStats.timeSeries\n| extend label = tostring(Element.label), \n         data = Element.data\n| mv-expand DataElement = data\n| extend Timestamp = unixtime_milliseconds_todatetime(toint(DataElement[0])),\n         Anomalies = toint(DataElement[1])\n| summarize TotalAnomalies = sum(Anomalies) by bin(Timestamp, 1d), label\n| project Timestamp, label, TotalAnomalies",
+                "size": 0,
+                "title": "Attack Distribution",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ],
+                "visualization": "barchart"
+              },
+              "name": "attackDistribution"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| mv-expand Targets = ParsedStoryData.incident.Threat.targets\n| extend IsValidIP = Targets.name matches regex @\"^((25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\\.){3}(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$\"\n| extend Type = iif(IsValidIP, \"ip-address\", \"domain\")\n| extend Target = tostring(Targets.name),\n    TargetLink = strcat('https://www.virustotal.com/gui/',Type,'/',tostring(Targets.name),'/details'),\n    Score = round(todouble(Targets.analysisScore),2),\n    Popularity = todouble(Targets.catoPopularity),\n    Categories = tostring(Targets.categories),\n    ThreatFeeds = tostring(Targets.threatFeeds),\n    ThreatReference = tostring(Targets.threatReference)\n| project Target, TargetLink, Score, Popularity, Categories, ThreatFeeds, ThreatReference",
+                "size": 0,
+                "title": "Attack Targets",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ],
+                "gridSettings": {
+                  "formatters": [
+                    {
+                      "columnMatch": "TargetLink",
+                      "formatter": 7,
+                      "formatOptions": {
+                        "linkTarget": "Url",
+                        "linkLabel": "Virus Total Analysis"
+                      }
+                    }
+                  ]
+                }
+              },
+              "name": "attacktargets"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoStoriesEngine_CL\n| where ID=='{currentStoryId}' and TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| take 1\n| extend ParsedStoryData = parse_json(StoryData)\n| mv-expand Flows = ParsedStoryData.incident.Threat.flows\n| extend\n    Target = tostring(Flows.target),\n    StartTime = todatetime(Flows.createdAt),\n    ClientClass = tostring(Flows.clientClass),\n    AppName = tostring(Flows.appName),\n    DestinationCountry = tostring(Flows.destinationCountry),\n    DestinationIP = tostring(Flows.destinationIp),\n    DestinationPort = toint(Flows.destinationPort),\n    Domain = tostring(Flows.domain),\n    Method = tostring(Flows.method),\n    FullPathUrl = strcat(Flows.appName,\"://\",Flows.domain,Flows.url),\n    SourceIP = tostring(Flows.sourceIp),\n    URL = tostring(Flows.url),\n    TunnelGeolocation = tostring(Flows.tunnelGeolocation),\n    DestinationGeolocation = tostring(Flows.destinationGeolocation),\n    Direction = tostring(Flows.direction),\n    SourcePort = toint(Flows.sourcePort),\n    HttpResponseCode = toint(Flows.httpResponseCode),\n    Ja3 = tostring(Flows.ja3),\n    UserAgent = tostring(Flows.userAgent)\n| project Target, StartTime, Direction, SourceIP, SourcePort,  DestinationIP, DestinationPort, Method,  FullPathUrl, ClientClass, DestinationCountry, TunnelGeolocation, DestinationGeolocation, HttpResponseCode, UserAgent",
+                "size": 0,
+                "title": "Attack Related Events",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ]
+              },
+              "name": "attackrelatedevents"
+            }
+          ]
+        },
+        "conditionalVisibility": {
+          "parameterName": "currentTab",
+          "comparison": "isEqualTo",
+          "value": "xdrstory"
+        },
+        "name": "xdrstory"
+      },
+      {
+        "type": 12,
+        "content": {
+          "version": "NotebookGroup/1.0",
+          "groupType": "editable",
+          "items": [
+            {
+              "type": 1,
+              "content": {
+                "json": "## Events"
+              },
+              "name": "text - 1"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoEventEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| summarize subtype=count() by tostring(EventSubType)\n| sort by subtype\n| render piechart with(title=\"Event Feed Sub Types\")",
+                "size": 1,
+                "title": "Cato Networks Events Feed Sub-Types",
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ]
+              },
+              "name": "eventsubtype"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoEventEngine_CL\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end})\n| summarize Count = count() by tostring(EventType), bin(TimeGenerated, 1h)  \n| order by TimeGenerated asc\n",
+                "size": 0,
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ],
+                "visualization": "barchart"
+              },
+              "name": "eventsbar"
+            },
+            {
+              "type": 3,
+              "content": {
+                "version": "KqlItem/1.0",
+                "query": "CatoEventEngine_CL \n| take 100\n| where TimeGenerated between ({timeframe:start} .. {timeframe:end}) and LogData != \"\"  \n| extend parsedJson = parse_json(LogData)\n| project\n    TimeGenerated,\n    EventType,\n    EventSubType,\n    ISP_name = tostring(parsedJson.ISP_name),\n    account_id = tostring(parsedJson.account_id),\n    account_name = tostring(parsedJson.account_name),\n    action = tostring(parsedJson.action),\n    application = tostring(parsedJson.application),\n    dest_country = tostring(parsedJson.dest_country),\n    dest_ip = tostring(parsedJson.dest_ip),\n    dest_port = tostring(parsedJson.dest_port),\n    src_ip = tostring(parsedJson.src_ip),\n    src_port = tostring(parsedJson.src_port),\n    event_type = tostring(parsedJson.event_type)\n",
+                "size": 0,
+                "queryType": 0,
+                "resourceType": "microsoft.operationalinsights/workspaces",
+                "crossComponentResources": [
+                  "REPLACE_SUBSCRIPTION_ID_VALUE"
+                ]
+              },
+              "name": "query - 6"
+            }
+          ]
+        },
+        "conditionalVisibility": {
+          "parameterName": "currentTab",
+          "comparison": "isEqualTo",
+          "value": "events"
+        },
+        "name": "events"
+      }
+    ],
+    "fallbackResourceIds": [
+      "REPLACE_SUBSCRIPTION_ID_VALUE"
+    ],
+    "fromTemplateId": "sentinel-UserWorkbook",
+    "$schema": "https://github.com/Microsoft/Application-Insights-Workbooks/blob/master/schema/workbook.json"
+  }
