@@ -20,12 +20,15 @@ Next, enter a name for the resources to use in the Azure Resource Group. The def
 
 We now have some new features added which allow you to determine the information that will be ingested into your Azure Log Analytics Workspace Tables.
 
-**Enable Cato Events** - When set to _True_, data from the Cato Events Feed is sent to the Log Analytics Workspace table **CatoEventEngine_CL**.
-**Enable Cato Cef** - When set to _True_, data from the Cato Events Feed is sent to the Log Analytics Workspace table **Custom-CommonSecurityLog**.
-**Enable Cato Audit Logs** - When set to _True_, data from the Cato Audit Feed is sent to the Log Analytics Workspace table **CatoAuditEngine_CL**.
-**Enable Cato Stories** - When set to _True_, data from Cato XDR Stories is sent to the Log Analytics Workspace table **CatoStoriesEngine_CL**.
+<ins>Enable Cato Events</ins> - When set to _True_, data from the Cato Events Feed is sent to the Log Analytics Workspace table **CatoEventEngine_CL**.
 
-**Cato Event Filter** - This is the filter applies to the Cato Event Feed query to limit data retrieved by the Azure FunctionApp and thus ingested into Log Analytics. Some examples can be found below. **Leave empty to retrieve all data.**
+<ins>Enable Cato Cef</ins> - When set to _True_, data from the Cato Events Feed is sent to the Log Analytics Workspace table **Custom-CommonSecurityLog**.
+
+<ins>Enable Cato Audit Logs</ins> - When set to _True_, data from the Cato Audit Feed is sent to the Log Analytics Workspace table **CatoAuditEngine_CL**.
+
+<ins>Enable Cato Stories</ins> - When set to _True_, data from Cato XDR Stories is sent to the Log Analytics Workspace table **CatoStoriesEngine_CL**.
+
+<ins>Cato Event Filter</ins> - This is the filter applies to the Cato Event Feed query to limit data retrieved by the Azure FunctionApp and thus ingested into Log Analytics. Some examples can be found below. **Leave empty to retrieve all data.**
 
 Retrieve only _Security_ event types:
 ```
