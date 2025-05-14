@@ -6,17 +6,51 @@ To deploy the Cato Sentinel Connector, follow the link below:
 
 Once run, you will see a screen which asks for some basic details:
 
-![arm deployment](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/cato-sentinel-deploy.png?raw=true)
+![arm deployment](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/cato-sentinel-arm.png?raw=true)
 
 Select the Azure Subscription, Region, and Resource Group that contains your Microsoft Azure Sentinel deployment.
 
-Your Cato Account ID can be found in your CMA Dashboard. You will also need to have a Cato API key created with read capabilities. 
+Your Cato Account ID can be found in your CMA Dashboard. You will also need to have a Cato API key created with read capabilities. ![Instructions for create an API key can be found here.](https://support.catonetworks.com/hc/en-us/articles/4413280536081-Generating-API-Keys-for-the-Cato-API)
 
 Next, enter the Microsoft Azure Log Analytics Workspace name associated with your Sentinel deployment. This can be found in the Azure Portal as shown here:
 
 ![log analytics workspace](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/az-log-wrks.png?raw=true)
 
 Next, enter a name for the resources to use in the Azure Resource Group. The default can be used or a value of less than 12 characters and greater than 3 can be entered.
+
+We now have some new features added which allow you to determine the information that will be ingested into your Azure Log Analytics Workspace Tables.
+
+**Enable Cato Events** - When set to _True_, data from the Cato Events Feed is sent to the Log Analytics Workspace table **CatoEventEngine_CL**.
+**Enable Cato Cef** - When set to _True_, data from the Cato Events Feed is sent to the Log Analytics Workspace table **Custom-CommonSecurityLog**.
+**Enable Cato Audit Logs** - When set to _True_, data from the Cato Audit Feed is sent to the Log Analytics Workspace table **CatoAuditEngine_CL**.
+**Enable Cato Stories** - When set to _True_, data from Cato XDR Stories is sent to the Log Analytics Workspace table **CatoStoriesEngine_CL**.
+
+**Cato Event Filter** - This is the filter applies to the Cato Event Feed query to limit data retrieved by the Azure FunctionApp and thus ingested into Log Analytics. Some examples can be found below. **Leave empty to retrieve all data.**
+
+Retrieve only _Security_ event types:
+```
+[{"fieldName":"event_type","operator":"is","values":["Security"]}]
+```
+
+Retrieve only _Connectivity_ event types:
+```
+[{"fieldName":"event_type","operator":"is","values":["Connectivity"]}]
+```
+
+Retrieve only _Security_ and _Connectivity_ event types:
+```
+[{"fieldName":"event_type","operator":"is","values":["Security","Connectivity"]}]
+```
+
+Retrieve only event sub types of type _Internet Firewall_:
+```
+[{"fieldName":"event_sub_type","operator":"is","values":["Internet Firewall"]}]
+```
+
+Retrieve only events of type _Security_ with a sub type of _Internet Firewall_:
+```
+[{"fieldName":"event_type","operator":"is","values":["Security"]},{"fieldName":"event_sub_type","operator":"is","values":["Internet Firewall"]}]
+```
 
 Finally, click on Review + Create
 

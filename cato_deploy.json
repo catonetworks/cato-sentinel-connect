@@ -29,7 +29,58 @@
             "type": "string",
             "minLength": 3,
             "maxLength": 12
-        }
+        },
+        "EnableCatoEvents": {
+            "type": "string",
+            "allowedValues": [
+                "True",
+                "False"
+            ],
+            "defaultValue": "True",
+            "metadata": {
+              "description": "Whether events should be sent to Azure Log Analytics."
+            }
+        },
+        "EnableCatoCef": {
+            "type": "string",
+            "allowedValues": [
+                "True",
+                "False"
+            ],
+            "defaultValue": "True",
+            "metadata": {
+              "description": "Whether events should be sent to Azure Log Analytics CommonSecurityLog table."
+            }
+        },
+        "EnableCatoAuditLogs": {
+            "type": "string",
+            "allowedValues": [
+                "True",
+                "False"
+            ],
+            "defaultValue": "True",
+            "metadata": {
+              "description": "Whether audit logs should be sent to Azure Log Analytics."
+            }
+        },
+        "EnableCatoStories": {
+            "type": "string",
+            "allowedValues": [
+                "True",
+                "False"
+            ],
+            "defaultValue": "True",
+            "metadata": {
+              "description": "Whether XDR Stories should be sent to Azure Log Analytics."
+            }
+        },
+        "CatoEventFilter": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+              "description": "Filter applied to Cato EventsFeed to limit data ingestion. Example: [{\"fieldName\":\"event_type\",\"operator\":\"is\",\"values\":[\"Security\"]}]"
+            }
+        }         
     },
     "variables": 
     {
@@ -162,6 +213,7 @@
             "name": "[variables('tableEventName')]",
             "properties": 
             {
+                "totalRetentionInDays": 30,
                 "plan": "Analytics",
                 "schema": 
                 {
@@ -206,6 +258,7 @@
             "name": "[variables('tableAuditName')]",
             "properties": 
             {
+                "totalRetentionInDays": 30,
                 "plan": "Analytics",
                 "schema": 
                 {
@@ -234,6 +287,7 @@
             "name": "[variables('tableStoriesName')]",
             "properties": 
             {
+                "totalRetentionInDays": 30,
                 "plan": "Analytics",
                 "schema": 
                 {
@@ -535,7 +589,27 @@
                         {
                             "name": "WEBSITE_RUN_FROM_PACKAGE",
                             "value": "https://cato-pub.s3.us-west-2.amazonaws.com/eventEngine/deploy-se.zip"
-                        }                                                       
+                        },
+                        {
+                            "name": "CATO_EVENTS_ENABLED",
+                            "value": "[parameters('EnableCatoEvents')]"
+                        },
+                        {
+                            "name": "CATO_CEF_ENABLED",
+                            "value": "[parameters('EnableCatoCef')]"
+                        },
+                        {
+                            "name": "CATO_AUDITS_ENABLED",
+                            "value": "[parameters('EnableCatoAuditLogs')]"
+                        },
+                        {
+                            "name": "CATO_STORIES_ENABLED",
+                            "value": "[parameters('EnableCatoStories')]"
+                        },
+                        {
+                            "name": "CATO_EVENT_FILTER",
+                            "value": "[parameters('CatoEventFilter')]"
+                        }
                     ],
                     "numberOfWorkers": 1,
                     "acrUseManagedIdentityCreds": false,
