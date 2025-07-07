@@ -40,7 +40,7 @@
             ],
             "defaultValue": "Dynamic",
             "metadata": {
-              "description": "Whether audit logs should be sent to Azure Log Analytics."
+              "description": "The application service plan SKU leveraged for the compute resources. Unless required, the default value of Dynamic should be used."
             }
         },        
         "EnableCatoEvents": {
