@@ -6,7 +6,7 @@ To deploy the Cato Sentinel Connector, follow the link below:
 
 Once run, you will see a screen which asks for some basic details:
 
-![arm deployment](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/cato-sentinel-arm.png?raw=true)
+![arm deployment](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/cato-sentinel-arm-07-2025.png?raw=true)
 
 Select the Azure Subscription, Region, and Resource Group that contains your Microsoft Azure Sentinel deployment.
 
@@ -15,6 +15,10 @@ Your Cato Account ID can be found in your CMA Dashboard. You will also need to h
 Next, enter the Microsoft Azure Log Analytics Workspace name associated with your Sentinel deployment. This can be found in the Azure Portal as shown here:
 
 ![log analytics workspace](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/az-log-wrks.png?raw=true)
+
+The majority of customers will choose to leverage the default Dynamic Azure Service Plan for their FunctionApp deployment. For those customers that do not have an available Dynamic Service Plan available, alternative Basic and Premium SKUs are offering during the deployment process as shown below:
+
+![Azure Service Plan Configuration](https://github.com/catonetworks/cato-sentinel-connect/blob/main/img/service-plans.png?raw=true)
 
 Next, enter a name for the resources to use in the Azure Resource Group. The default can be used or a value of less than 12 characters and greater than 3 can be entered.
 

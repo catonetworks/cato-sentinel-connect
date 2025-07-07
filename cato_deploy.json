@@ -30,6 +30,19 @@
             "minLength": 3,
             "maxLength": 12
         },
+        "ServicePlanType":
+        {
+            "type": "string",
+            "allowedValues": [
+                "Dynamic",
+                "Basic",
+                "Premium"
+            ],
+            "defaultValue": "Dynamic",
+            "metadata": {
+              "description": "Whether audit logs should be sent to Azure Log Analytics."
+            }
+        },        
         "EnableCatoEvents": {
             "type": "string",
             "allowedValues": [
@@ -98,7 +111,6 @@
         "CatoServerPlan": "[concat(parameters('CatoEventEngineName'), variables('deploySuffix'))]",
         "SentinelWorkspace": "[parameters('SentinelWorkspace')]",
         "SentinelWorkspaceResId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('SentinelWorkspace'))]"
-
     },
     "resources": 
     [
@@ -179,6 +191,7 @@
             }
         },
         {
+            "condition": "[equals(parameters('ServicePlanType'),'Dynamic')]",
             "type": "Microsoft.Web/serverfarms",
             "apiVersion": "2023-12-01",
             "name": "[variables('CatoServerPlan')]",
@@ -206,6 +219,64 @@
                 "zoneRedundant": false
             }
         },
+        {
+            "condition": "[equals(parameters('ServicePlanType'),'Basic')]",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2023-12-01",
+            "name": "[variables('CatoServerPlan')]",
+            "location": "[resourceGroup().location]",
+            "sku": 
+            {
+                "name": "B1",
+                "tier": "Basic",
+                "size": "B1",
+                "family": "B",
+                "capacity": 1
+            },
+            "kind": "functionapp",
+            "properties": 
+            {
+                "perSiteScaling": false,
+                "elasticScaleEnabled": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0,
+                "zoneRedundant": false
+            }
+        },
+        {
+            "condition": "[equals(parameters('ServicePlanType'),'Premium')]",
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2023-12-01",
+            "name": "[variables('CatoServerPlan')]",
+            "location": "[resourceGroup().location]",
+            "sku":
+            {
+                "name": "P1v3",
+                "tier": "PremiumV3",
+                "size": "P1v3",
+                "family": "Pv3",
+                "capacity": 1
+            },
+            "kind": "functionapp",
+            "properties": 
+            {
+                "perSiteScaling": false,
+                "elasticScaleEnabled": false,
+                "maximumElasticWorkerCount": 1,
+                "isSpot": false,
+                "reserved": true,
+                "isXenon": false,
+                "hyperV": false,
+                "targetWorkerCount": 0,
+                "targetWorkerSizeId": 0,
+                "zoneRedundant": false
+            }
+        },            
         {
             "type": "Microsoft.OperationalInsights/workspaces/tables",
             "apiVersion": "2022-10-01",
@@ -282,7 +353,7 @@
             "type": "Microsoft.OperationalInsights/workspaces/tables",
             "apiVersion": "2022-10-01",
             "name": "[variables('tableStoriesName')]",
-            "properties": 
+                "properties": 
             {
                 "plan": "Analytics",
                 "schema": 
